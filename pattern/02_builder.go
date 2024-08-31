@@ -11,63 +11,72 @@ https://en.wikipedia.org/wiki/Builder_pattern
 // Минусы: требует внедрения дополнительных классов и методов, что усложняет код программы.
 // Реальный пример: сборка заказа, состоящего из нескольких этапов и частей (товаров, оплаты и доставки).
 
-// Структура заказа.
-type Order struct {
-	Items    []Item
-	Payment  Payment
-	Delivery Delivery
+// Структура, объекты которой собирает строитель.
+type BuilderProduct struct {
+	x, y, z int
 }
 
-// Структура товара.
-type Item struct {
-	Name  string
-	Price float64
+// Интерфейс строителя.
+type Builder interface {
+	Reset() Builder
+	SetX(x int) Builder
+	SetY(y int) Builder
+	SetZ(z int) Builder
+	Build() BuilderProduct
 }
 
-// Структура оплаты.
-type Payment struct {
-	Amount float64
-	Bank   string
+// Структура конкретного строителя, реализующая интерфейс.
+type ConcreteBuilder struct {
+	product BuilderProduct
 }
 
-// Структура доставки.
-type Delivery struct {
-	Addr  string
-	Phone string
-}
-
-// Строитель, создающий заказ.
-type OrderBuilder struct {
-	order Order
-}
-
-func NewOrderBuilder() *OrderBuilder { return new(OrderBuilder) }
-
-// Добавить товар в заказ.
-func (b *OrderBuilder) AddItem(item Item) *OrderBuilder {
-	b.order.Items = append(b.order.Items, item)
+// Сбрасывает состояние собираемого объекта.
+func (b *ConcreteBuilder) Reset() Builder {
+	b.product = BuilderProduct{}
 	return b
 }
 
-// Установить оплату заказа.
-func (b *OrderBuilder) SetPayment(amount float64, bank string) *OrderBuilder {
-	b.order.Payment = Payment{amount, bank}
+// Устанавливает значение X собираемого объекта.
+func (b *ConcreteBuilder) SetX(x int) Builder {
+	b.product.x = x
 	return b
 }
 
-// Установить доставку заказа.
-func (b *OrderBuilder) SetDelivery(addr string, phone string) *OrderBuilder {
-	b.order.Delivery = Delivery{addr, phone}
+// Устанавливает значение Y собираемого объекта.
+func (b *ConcreteBuilder) SetY(y int) Builder {
+	b.product.y = y
 	return b
 }
 
-// Вернуть построенный заказ.
-func (b *OrderBuilder) Build() Order { return b.order }
+// Устанавливает значение Z собираемого объекта.
+func (b *ConcreteBuilder) SetZ(z int) Builder {
+	b.product.z = z
+	return b
+}
+
+// Возвращает собранный объект.
+func (b ConcreteBuilder) Build() BuilderProduct { return b.product }
+
+// Структура директора, определяющего порядок вызова шагов строителя.
+type Director struct {
+	builder Builder
+}
+
+// Устанавливает активного строителя.
+func (d *Director) SetBuilder(builder Builder) { d.builder = builder }
+
+// Собирает и возвращает объект.
+func (d Director) GetProduct() BuilderProduct { return d.builder.Reset().SetX(10).SetY(20).Build() }
 
 /*
-order := NewOrderBuilder().
-	AddItem(Item{"laptop", 1000}).AddItem(Item{"fridge", 5000}).
-	SetPayment(6000, "bank").
-	SetDelivery("6 some st.", "900").
-	Build()
+// Собираем объект без директора.
+builder := ConcreteBuilder{}
+product1 := builder.SetY(10).SetZ(5).Build()
+fmt.Println(product1) // {0 10 5}
+
+// Собираем объект с директором.
+director := Director{}
+director.SetBuilder(&builder)
+product2 := director.GetProduct()
+fmt.Println(product2) // {10 20 0}
 */

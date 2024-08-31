@@ -13,82 +13,46 @@ https://en.wikipedia.org/wiki/Facade_pattern
 // Минусы: может стать слишком крупным, что усложнит его использование и тестирование.
 // Реальный пример: сервис заказов, использующий множество других подсервисов (товаров, оплаты и доставки).
 
-// Некоторый сервис, отвечающий за товары в заказе.
-type ItemService struct {
-	items []any
+// Структура сервиса сложной системы.
+type FacadeService1 struct {
 }
 
-// Добавить товар.
-func (s *ItemService) AddItem(item any) { fmt.Printf("AddItem: %v\n", item) }
+// Выполняет некоторое действие.
+func (s FacadeService1) Action() { fmt.Println("Service1.Action") }
 
-// Удалить товар.
-func (s *ItemService) RemoveItem(itemID string) { fmt.Printf("RemoveItem: %s\n", itemID) }
-
-// Получить список добавленных товаров.
-func (s *ItemService) GetItems() []any { return s.items }
-
-// Некоторый сервис, отвечающий за оплату заказа.
-type PaymentService struct {
-	status string
-	amount float64
+// Структура сервиса сложной системы.
+type FacadeService2 struct {
 }
 
-// Выполнить оплату.
-func (s *PaymentService) ProcessPayment(amount float64) { fmt.Printf("ProcessPayment: %f\n", amount) }
+// Выполняет некоторое действие.
+func (s FacadeService2) Action() { fmt.Println("Service2.Action") }
 
-// Вернуть оплату.
-func (s *PaymentService) RefundPayment() { fmt.Println("RefundPayment") }
-
-// Получить статус оплаты.
-func (s *PaymentService) GetPaymentStatus() string { return s.status }
-
-// Некоторый сервис, отвечающий за доставку заказа.
-type DeliveryService struct {
-	state    string
-	statuses []string
+// Структура сервиса сложной системы.
+type FacadeService3 struct {
 }
 
-// Организовать доставку по адресу.
-func (s *DeliveryService) ArrangeDelivery(addr string) { fmt.Printf("ArrangeDelivery: %s\n", addr) }
+// Выполняет некоторое действие.
+func (s FacadeService3) Action() { fmt.Println("Service3.Action") }
 
-func (s *DeliveryService) TrackDelivery() []string { return s.statuses }
-
-func (s *DeliveryService) CancelDelivery() { fmt.Println("CancelDelivery") }
-
-// Сервис, реализующий упрощенный интерфейс к сложной системе и отвечающий за заказ.
-type OrderService struct {
-	itemService     *ItemService
-	paymentService  *PaymentService
-	deliveryService *DeliveryService
+// Структура фасада сложной системы.
+type Facade struct {
+	service1 FacadeService1
+	service2 FacadeService2
+	service3 FacadeService3
 }
 
-// Создание сервиса для заказов
-func NewOrderService() *OrderService {
-	return &OrderService{
-		itemService:     &ItemService{},
-		paymentService:  &PaymentService{},
-		deliveryService: &DeliveryService{},
-	}
+// Предоставляет некоторую функциональность системы.
+func (s Facade) ComplexAction() {
+	s.service1.Action()
+	s.service2.Action()
+	s.service3.Action()
 }
 
-// Сделать заказ.
-func (s *OrderService) MakeOrder(items []any, amount float64, address string) {
-	for _, item := range items {
-		s.itemService.AddItem(item)
-	}
-	s.paymentService.ProcessPayment(amount)
-	s.deliveryService.ArrangeDelivery(address)
-}
+/*
+service1 := FacadeService1{}
+service2 := FacadeService2{}
+service3 := FacadeService3{}
 
-// Отменить заказ.
-func (s *OrderService) CancelOrder() {
-	s.paymentService.RefundPayment()
-	s.deliveryService.CancelDelivery()
-}
-
-// Получить статус заказа.
-func (s *OrderService) GetOrderStatus() {
-	fmt.Printf("Items: %v\n", s.itemService.GetItems())
-	fmt.Printf("Payment Status: %s\n", s.paymentService.GetPaymentStatus())
-	fmt.Printf("Delivery Status: %v\n", s.deliveryService.TrackDelivery())
-}
+facade := Facade{service1: service1, service2: service2, service3: service3}
+facade.ComplexAction()
+*/
