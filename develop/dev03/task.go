@@ -246,17 +246,17 @@ func main() {
 		return
 	}
 
-	defer func() {
-		if err := file.Close(); err != nil {
-			Errorf("failed to close file: %s", err)
-		}
-	}()
-
 	// Читаем строки из файла и записываем в срез строк.
 	strs, err := ReadStrings(file)
 	if err != nil {
 		Errorf("failed to read file: %s", err)
+		file.Close()
 		return
+	}
+
+	// Закрываем файл.
+	if err := file.Close(); err != nil {
+		Errorf("failed to close file: %s", err)
 	}
 
 	// Удаляем пробельные символы из строк.
