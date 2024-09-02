@@ -1,5 +1,10 @@
 package main
 
+import (
+	"slices"
+	"strings"
+)
+
 /*
 === Поиск анаграмм по словарю ===
 
@@ -19,6 +24,36 @@ package main
 Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-func main() {
+// Функция поиска всех множеств анаграмм.
+func SearchAnagramms(words []string) map[string][]string {
+	// Сортируем срез слов, чтобы слова добавлялись во множества по возрастанию.
+	slices.Sort(words)
 
+	// Создаем "грязную" мапу множеств анаграмм.
+	dirty := make(map[string][]string)
+
+	for _, word := range words {
+		lowerWord := strings.ToLower(word) // неотсортированное слово, приведенное к нижнему регистру
+		unsortedWord := []rune(lowerWord)  // представление неотсортированного слова в виде рун
+
+		// Сортируем руны неотсортированного слова
+		slices.Sort(unsortedWord)
+		sortedWord := string(unsortedWord) // представление отсортированного слова в виде строки
+
+		// Добавляем неотсортированное слово во множество.
+		dirty[sortedWord] = append(dirty[sortedWord], lowerWord)
+	}
+
+	// Создаем "чистую" мапу множеств анаграмм
+	// с правильными ключами и без множеств, состоящих из одного элемента.
+	clean := make(map[string][]string)
+
+	// Заполняем "чистую" мапу множеств анаграмм.
+	for _, words := range dirty {
+		if len(words) > 1 {
+			clean[words[0]] = words
+		}
+	}
+
+	return clean
 }
