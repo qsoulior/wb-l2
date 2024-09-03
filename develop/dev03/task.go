@@ -229,28 +229,29 @@ func main() {
 	// Парсим путь до файла из аргумента.
 	path := flag.Arg(0)
 	if path == "" {
-		Errorf("empty file path")
-		return
+		Errorf("empty file path\n")
+		os.Exit(2)
 	}
 
 	// Открываем файл на чтение.
 	file, err := os.Open(path)
 	if err != nil {
-		Errorf("failed to open file: %s", err)
-		return
+		Errorf("failed to open file: %s\n", err)
+		os.Exit(1)
 	}
 
 	// Читаем строки из файла и записываем в срез строк.
 	strs, err := ReadStrings(file)
 	if err != nil {
-		Errorf("failed to read file: %s", err)
+		Errorf("failed to read file: %s\n", err)
 		file.Close()
-		return
+		os.Exit(1)
 	}
 
 	// Закрываем файл.
 	if err := file.Close(); err != nil {
-		Errorf("failed to close file: %s", err)
+		Errorf("failed to close file: %s\n", err)
+		os.Exit(1)
 	}
 
 	// Удаляем пробельные символы из строк.
@@ -267,7 +268,26 @@ func main() {
 
 	// Сортируем строки и выводим отсортированный результат.
 	Sort(&strs, opts)
+
+	// Создаем файл для записи результата.
+	file, err = os.Create("output.txt")
+	if err != nil {
+		Errorf("failed to create file: %s\n", err)
+		os.Exit(1)
+	}
+
 	for _, str := range strs {
-		fmt.Println(str)
+		_, err := fmt.Fprintln(file, str)
+		if err != nil {
+			Errorf("failed to write string: %s\n", err)
+			file.Close()
+			os.Exit(1)
+		}
+	}
+
+	// Закрываем файл.
+	if err := file.Close(); err != nil {
+		Errorf("failed to close file: %s\n", err)
+		os.Exit(1)
 	}
 }
