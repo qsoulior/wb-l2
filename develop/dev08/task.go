@@ -31,13 +31,16 @@ import (
 и при необходимости выводит результат на экран. Интерактивный сеанс поддерживается до тех пор, пока не будет введена команда выхода (например \quit).
 */
 
+// Интерфейс команды, которую может выполнить шелл.
 type Command interface {
 	Execute(args ...string) (string, error)
 }
 
+// Структура команды cd, реализующая интерфейс.
 type CD struct {
 }
 
+// Execute выполняет команду с аргументами args и возвращает строку результата или ошибку.
 func (c CD) Execute(args ...string) (string, error) {
 	if len(args) > 0 {
 		dir := args[0]
@@ -49,9 +52,11 @@ func (c CD) Execute(args ...string) (string, error) {
 	return "", nil
 }
 
+// Структура команды pwd, реализующая интерфейс.
 type PWD struct {
 }
 
+// Execute выполняет команду с аргументами args и возвращает строку результата или ошибку.
 func (c PWD) Execute(args ...string) (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -61,9 +66,11 @@ func (c PWD) Execute(args ...string) (string, error) {
 	return wd, nil
 }
 
+// Структура команды echo, реализующая интерфейс.
 type Echo struct {
 }
 
+// Execute выполняет команду с аргументами args и возвращает строку результата или ошибку.
 func (c Echo) Execute(args ...string) (string, error) {
 	var builder strings.Builder
 	for i, arg := range args {
@@ -75,9 +82,11 @@ func (c Echo) Execute(args ...string) (string, error) {
 	return builder.String(), nil
 }
 
+// Структура команды kill, реализующая интерфейс.
 type Kill struct {
 }
 
+// Execute выполняет команду с аргументами args и возвращает строку результата или ошибку.
 func (c Kill) Execute(args ...string) (string, error) {
 	if len(args) == 0 {
 		return "", nil
@@ -97,9 +106,11 @@ func (c Kill) Execute(args ...string) (string, error) {
 	return fmt.Sprintf("process %d was killed", pid), nil
 }
 
+// Структура команды ps, реализующая интерфейс.
 type PS struct {
 }
 
+// Execute выполняет команду с аргументами args и возвращает строку результата или ошибку.
 func (c PS) Execute(args ...string) (string, error) {
 	var limit int
 	if len(args) > 0 {
@@ -126,9 +137,11 @@ func (c PS) Execute(args ...string) (string, error) {
 	return builder.String(), nil
 }
 
+// Структура команды exec, реализующая интерфейс.
 type Exec struct {
 }
 
+// Execute выполняет команду с аргументами args и возвращает строку результата или ошибку.
 func (c Exec) Execute(args ...string) (string, error) {
 	if len(args) == 0 {
 		return "", nil
@@ -142,6 +155,7 @@ func (c Exec) Execute(args ...string) (string, error) {
 	return string(output), nil
 }
 
+// Мапа доступных команд.
 var commands = map[string]Command{
 	"cd":   new(CD),
 	"pwd":  new(PWD),
@@ -151,6 +165,8 @@ var commands = map[string]Command{
 	"exec": new(Exec),
 }
 
+// ParseLine принимает строку для вызова команды и парсит ее.
+// Возвращает объект с интерфейсом Command и срез аргументов или ошибку.
 func ParseLine(line string) (Command, []string, error) {
 	args := strings.Split(strings.TrimSpace(line), " ")
 	cmd, ok := commands[args[0]]
@@ -160,6 +176,9 @@ func ParseLine(line string) (Command, []string, error) {
 	return cmd, args[1:], nil
 }
 
+// ExecuteLines принимает строки для вызова команд, парсит каждую из них
+// и вызывает по очереди, возвращая результат последней вызванной команды.
+// Аргументы используются только в первой команде из среза.
 func ExecuteLines(lines []string) (string, error) {
 	if len(lines) == 0 {
 		return "", nil
@@ -192,6 +211,8 @@ func ExecuteLines(lines []string) (string, error) {
 
 func main() {
 	fmt.Fprint(os.Stdout, "Welcome to shell! Enter \\q or \\quit to exit.\n> ")
+
+	// Сканируем stdin построчно.
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		text := scanner.Text()
@@ -204,6 +225,7 @@ func main() {
 			continue
 		}
 
+		// Если команда одна, то lines будет срезом из одного элемента.
 		lines := strings.Split(text, "|")
 		result, err := ExecuteLines(lines)
 		if err != nil {

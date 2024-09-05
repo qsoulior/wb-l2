@@ -21,12 +21,16 @@ import (
 Реализовать утилиту wget с возможностью скачивать сайты целиком.
 */
 
+// Структура-обертка над http-клиентом.
 type Wget struct {
 	http.Client
 }
 
+// Вспомогательный тип множества.
 type set[T comparable] map[T]struct{}
 
+// ExtractAttrs читает r и извлекает значения атрибутов для каждого html-тэга из tags.
+// Возвращает мапу вида: тэг - множество значений атрибутов.
 func (w Wget) ExtractAttrs(r io.Reader, tags map[string]set[string]) map[string]set[string] {
 	values := make(map[string]set[string])
 	tokenizer := html.NewTokenizer(r)
@@ -50,6 +54,9 @@ func (w Wget) ExtractAttrs(r io.Reader, tags map[string]set[string]) map[string]
 	}
 }
 
+// ExtractLinks читает r и извлекает значения атрибутов для каждого html-тэга из tags,
+// ожидая увидеть в качестве значений валидные url-адреса.
+// Возвращает мапу вида: тэг - множество url-адресов.
 func (w Wget) ExtractLinks(r io.Reader, host string, tags map[string]set[string]) (map[string][]string, error) {
 	hostURL, err := url.Parse(host)
 	if err != nil {
@@ -63,6 +70,7 @@ func (w Wget) ExtractLinks(r io.Reader, host string, tags map[string]set[string]
 			if err != nil {
 				continue
 			}
+			// Если url-адрес относительный, то добавляем scheme и host хост-адреса.
 			if linkURL.Scheme == "" {
 				linkURL.Scheme = hostURL.Scheme
 			}
@@ -76,8 +84,10 @@ func (w Wget) ExtractLinks(r io.Reader, host string, tags map[string]set[string]
 	return links, nil
 }
 
+// Путь до папки для хранения результата загрузки.
 const RESULT_PATH = "result"
 
+// DownloadFile запрашивает файл из src и создает его в папке RESULT_PATH.
 func (w Wget) DownloadFile(src string) (io.Reader, error) {
 	fileURL, err := url.Parse(src)
 	if err != nil {
@@ -107,6 +117,8 @@ func (w Wget) DownloadFile(src string) (io.Reader, error) {
 	return &buf, nil
 }
 
+// WriteFile читает данные из r и записывает в файл по пути path.
+// Создает файл и все родительские папки, если они не существует по пути path.
 func (w Wget) WriteFile(r io.Reader, path string) error {
 	err := os.MkdirAll(filepath.Dir(path), 0666)
 	if err != nil {
@@ -124,6 +136,8 @@ func (w Wget) WriteFile(r io.Reader, path string) error {
 	return err
 }
 
+// BFS обходит в ширину html-страницы с максимальной глубиной depth.
+// Для каждой страницы также загружает медиа-файлы.
 func (w Wget) BFS(start string, depth int) <-chan error {
 	errCh := make(chan error)
 	go func() {
@@ -171,10 +185,12 @@ func (w Wget) BFS(start string, depth int) <-chan error {
 }
 
 func main() {
+	// Парсим максимальную глубину обхода, переданную в качестве флага.
 	var depth int
 	flag.IntVar(&depth, "l", 0, "set the maximum number of subdirectories that Wget will recurse into to depth")
 	flag.Parse()
 
+	// Парсим аргумент целевого url-адреса.
 	target := flag.Arg(0)
 	if target == "" {
 		fmt.Fprintln(os.Stderr, "target url is empty")
@@ -183,6 +199,8 @@ func main() {
 
 	wget := Wget{}
 	errCh := wget.BFS(target, depth)
+
+	// Записываем ошибки в отдельный файл.
 	file, err := os.Create("result.log")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create log file: %s", err)
