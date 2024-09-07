@@ -1,5 +1,10 @@
 package main
 
+import (
+	"dev11/app"
+	"flag"
+)
+
 /*
 === HTTP server ===
 
@@ -27,6 +32,14 @@ package main
 	- В случае ошибки бизнес-логики сервер должен возвращать HTTP 503. В случае ошибки входных данных (невалидный int например) сервер должен возвращать HTTP 400. В случае остальных ошибок сервер должен возвращать HTTP 500. Web-сервер должен запускаться на порту указанном в конфиге и выводить в лог каждый обработанный запрос.
 */
 
-func main() {
+var host, port string
 
+func init() {
+	flag.StringVar(&host, "host", "localhost", "host for the server to listen on")
+	flag.StringVar(&port, "port", "3000", "port for the server to listen on")
+}
+
+func main() {
+	flag.Parse()
+	app.Run(host, port)
 }
